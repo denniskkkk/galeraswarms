@@ -1,0 +1,117 @@
+version: '3.8' 
+services:
+  dbshell:
+    container_name: dbshell
+    hostname: dbshell
+    image: local/mariadb-galera
+    #restart: always
+    command: bash -c "echo "...start...."; while true; do sleep 1; done"
+    networks:
+        mariadbnet:
+            ipv4_address: 10.100.0.100
+
+  db1:
+    container_name: db1
+    hostname: db1
+    image: local/mariadb-galera
+    #restart: always
+#    command: bash -c "while true; do sleep 1; date; done"
+#    command: docker-entrypoint.sh --
+    command: docker-entrypoint.sh --binlog_format=ROW --default-storage-engine=innodb --innodb_autoinc_lock_mode=2 --bind-address=0.0.0.0 
+    #--wsrep-new-cluster
+    
+#    --wsrep_on=ON --wsrep_provider=/usr/lib/galera/libgalera_smm.so --wsrep_cluster_name="galera_cluster" --wsrep_cluster_address="gcomm://#10.100.0.10,10.100.0.11,10.100.0.12" --wsrep_sst_method=rsync --wsrep_node_address="10.100.0.10" --wsrep_node_name="db1"
+#--wsrep-new-cluster
+    environment:
+       - MYSQL_ROOT_PASSWORD=password
+       - WSREP_ON=ON
+       - WSREP_PROVIDER=/usr/lib/galera/libgalera_smm.so
+       - WSREP_CLUSTER_NAME=galera_cluster
+       - WSREP_CLUSTER_ADDRESS=gcomm://10.100.0.10,10.100.0.11,10.100.0.12
+       - WSREP_SST_METHOD=rsync
+       - WSREP_NODE_ADDRESS=10.100.0.10
+       - WSREP_NODE_NAME=db1
+       - NEW_CLUSTER=true
+    expose:
+       - "3306/tcp"
+       - "4444/tcp"
+       - "4567/tcp"
+       - "4568/tcp"
+       - "4567/udp"
+#    volumes: 
+#       - /var/lib/docker/galeria/db1:/var/lib/mysql
+
+    networks:
+        mariadbnet:
+            ipv4_address: 10.100.0.10
+         
+
+  db2:
+    container_name: db2
+    hostname: db2
+    image: local/mariadb-galera
+    #restart: always
+#    command: bash -c "while true; do sleep 1; date; done"
+#    command: docker-entrypoint.sh --
+    command: docker-entrypoint.sh --binlog_format=ROW --default-storage-engine=innodb --innodb_autoinc_lock_mode=2 --bind-address=0.0.0.0 
+#--wsrep_on=ON --wsrep_provider=/usr/lib/galera/libgalera_smm.so --wsrep_cluster_name="galera_cluster" --wsrep_cluster_address="gcomm://#10.100.0.10,10.100.0.11,10.100.0.12" --wsrep_sst_method=rsync --wsrep_node_address="10.100.0.11" --wsrep_node_name="db2"
+    environment:
+       - MYSQL_ROOT_PASSWORD=password
+       - WSREP_ON=ON
+       - WSREP_PROVIDER=/usr/lib/galera/libgalera_smm.so
+       - WSREP_CLUSTER_NAME=galera_cluster
+       - WSREP_CLUSTER_ADDRESS=gcomm://10.100.0.10,10.100.0.11,10.100.0.12
+       - WSREP_SST_METHOD=rsync
+       - WSREP_NODE_ADDRESS=10.100.0.11
+       - WSREP_NODE_NAME=db2
+    expose:
+       - "3306/tcp"
+       - "4444/tcp"
+       - "4567/tcp"
+       - "4568/tcp"
+       - "4567/udp"
+#    volumes:
+#       - /var/lib/docker/galeria/db2:/var/lib/mysql         
+    networks:
+        mariadbnet:
+            ipv4_address: 10.100.0.11
+    depends_on:
+      - db1      
+
+  db3:
+    container_name: db3
+    hostname: db3
+    image: local/mariadb-galera
+    #restart: always
+#    command: bash -c "while true; do sleep 1; date; done"
+#    command: docker-entrypoint.sh --
+    command: docker-entrypoint.sh --binlog_format=ROW --default-storage-engine=innodb --innodb_autoinc_lock_mode=2 --bind-address=0.0.0.0
+#    --wsrep_on=ON --wsrep_provider=/usr/lib/galera/libgalera_smm.so --wsrep_cluster_name="galera_cluster" --wsrep_cluster_address="gcomm://#10.100.0.10,10.100.0.11,10.100.0.12" --wsrep_sst_method=rsync --wsrep_node_address="10.100.0.12" --wsrep_node_name="db3"
+    environment:
+       - MYSQL_ROOT_PASSWORD=password
+       - WSREP_ON=ON
+       - WSREP_PROVIDER=/usr/lib/galera/libgalera_smm.so
+       - WSREP_CLUSTER_NAME=galera_cluster
+       - WSREP_CLUSTER_ADDRESS=gcomm://10.100.0.10,10.100.0.11,10.100.0.12
+       - WSREP_SST_METHOD=rsync
+       - WSREP_NODE_ADDRESS=10.100.0.12
+       - WSREP_NODE_NAME=db3
+    expose:
+       - "3306/tcp"
+       - "4444/tcp"
+       - "4567/tcp"
+       - "4568/tcp"
+       - "4567/udp"
+#    volumes:
+#       - /var/lib/docker/galeria/db3:/var/lib/mysql         
+    networks:
+        mariadbnet:
+            ipv4_address: 10.100.0.12         
+    depends_on:
+      - db2
+networks:
+   mariadbnet:
+     ipam:
+       driver: default
+       config:
+       - subnet: "10.100.0.0/24"
